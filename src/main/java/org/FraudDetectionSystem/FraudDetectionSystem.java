@@ -55,7 +55,7 @@ public class FraudDetectionSystem {
             }else{
                 currentReport += "flagged for conducting transactions in Ping Pong pattern within last 10-minute.";
             }
-            report = report==null ? currentReport :report+ "\n"+currentReport;
+            report = report==null ?"\n\n====== TOTAL EXECUTION REPORT ======\n" + currentReport :report+ "\n\n"+currentReport;
         }
         return report;
     }
@@ -183,14 +183,6 @@ public class FraudDetectionSystem {
             updateUserBasedQueue(transactionEvent);
         }
     }
-    public List<TransactionEvent>  jsonToTransEventList(String jsonArray){
-        try {
-            TransactionEvent[] eventsArray = new ObjectMapper().readValue(jsonArray, TransactionEvent[].class);
-            return Arrays.asList(eventsArray);
-        }catch (Exception e){
-            //suppress error
-            return null;
-        }
-    }
+
 
 }

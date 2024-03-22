@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class DataGenerator {
@@ -28,17 +31,28 @@ public class DataGenerator {
         try (FileWriter writer = new FileWriter(filePath)) {
             writer.write(content);
         } catch (IOException e) {
-            System.err.println("Error writing string to file: " + e.getMessage());
+            System.err.println("could not write file: " + e.getMessage());
+        }
+    }
+
+    public String readFromFile(){
+        return readFromFile("data.txt");
+    }
+    public String readFromFile(String filePath){
+        try {
+            Path pathObj = Paths.get(filePath);
+            return Files.readString(pathObj);
+        } catch (IOException e) {
+            System.err.println("could not read: " + e.getMessage());
+            return null;
         }
     }
 
     public DataGenerator(){
-        //setSequenceInterupt(100 + new Random().nextInt(601));
         sampleData = generateStringTestData();
     }
 
     public DataGenerator(int sampleDataLength) {
-        //setSequenceInterupt(100 + new Random().nextInt(601));
         sampleData = generateStringTestData(sampleDataLength);
     }
 
@@ -110,5 +124,7 @@ public class DataGenerator {
             return null;
         }
     }
+
+
 
 }
