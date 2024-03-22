@@ -1,5 +1,7 @@
 package org.FraudDetectionSystem;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.*;
 
 public class FraudDetectionSystem {
@@ -31,8 +33,8 @@ public class FraudDetectionSystem {
     TreeMap<Long, Double> transactionEventQueue = new TreeMap<>();
     HashMap<String, TreeMap<Long, TransactionEvent>> userTransactionEvents = new HashMap<String, TreeMap<Long, TransactionEvent>>();
     HashMap<String, TreeSet<String>> fraudAlert = new HashMap<>();
-    public String getViolations(){
-        return fraudAlert.toString();
+    public HashMap<String, TreeSet<String>> getViolations(){
+        return fraudAlert;
     }
     public String getViolationsReport(){
         String report=null;
@@ -47,15 +49,24 @@ public class FraudDetectionSystem {
             currentReport = currentReport.indexOf(", " + lastUser + ", ") > -1 ? currentReport.replace(", " + lastUser + ", "," and " + lastUser +" ") : currentReport.replace(lastUser + ",",lastUser);
 
             if(FraudViolationType.valueOf(violations).equals(FraudViolationType.ThreeOrMoreServiceUsage)){
-                currentReport += "flagged for conducting transactions in more than 3 distinct services within a 5-minute window.";
+                currentReport += "flagged for conducting transactions in more than 3 distinct services within last 5-minute.";
             } else if (FraudViolationType.valueOf(violations).equals(FraudViolationType.UsualAverageTransaction)) {
-                currentReport += "flagged for conducting transactions significantly higher than typical amounts in 24-hours window.";
+                currentReport += "flagged for conducting transactions significantly higher than average amounts in last 24-hours.";
             }else{
-                currentReport += "flagged for conducting transactions in Ping Pong pattern.";
+                currentReport += "flagged for conducting transactions in Ping Pong pattern within last 10-minute.";
             }
             report = report==null ? currentReport :report+ "\n"+currentReport;
         }
         return report;
+    }
+    public String interactiveViolationsReport(FraudViolationType fraudViolationType, String user){
+        if(fraudViolationType.equals(FraudViolationType.ThreeOrMoreServiceUsage)){
+            return user + " flagged for conducting transactions in more than 3 distinct services within last 5-minute.";
+        } else if (fraudViolationType.equals(FraudViolationType.UsualAverageTransaction)) {
+            return user +  " flagged for conducting transactions significantly higher than average amounts within last 24-hours.";
+        }else{
+            return user +  " flagged for conducting transactions in Ping Pong pattern within last 10-minute.";
+        }
     }
     public void detect24HoursAverageViolation(TransactionEvent transactionEvent){
         long sometimeAgoTimestamp = currentTimestamp - (hoursOfAverageTransactions*3600);
@@ -124,12 +135,17 @@ public class FraudDetectionSystem {
         }
     }
     private void triggerViolation(String userID, FraudViolationType fraudViolationType){
+
         TreeSet<String> violations = fraudAlert.getOrDefault(fraudViolationType.toString(), new TreeSet<>());
         violations.add(userID);
         fraudAlert.put(fraudViolationType.toString(), violations);
+        System.out.println(interactiveViolationsReport(fraudViolationType, userID));
         return;
     }
     public void updateUserBasedQueue(TransactionEvent transactionEvent){
+
+        System.out.println("");
+        System.out.println(transactionEvent);
         setCurrentTimestamp(System.currentTimeMillis()/1000);
         long _10MinAgoTimestamp = currentTimestamp - (10*60);
         long _5MinAgoTimestamp = currentTimestamp - (5*60);
@@ -159,6 +175,22 @@ public class FraudDetectionSystem {
         }
 
 
+    }
+
+    public void updateUserBasedQueue(List<TransactionEvent> transactionEvents){
+        for (TransactionEvent transactionEvent:
+             transactionEvents) {
+            updateUserBasedQueue(transactionEvent);
+        }
+    }
+    public List<TransactionEvent>  jsonToTransEventList(String jsonArray){
+        try {
+            TransactionEvent[] eventsArray = new ObjectMapper().readValue(jsonArray, TransactionEvent[].class);
+            return Arrays.asList(eventsArray);
+        }catch (Exception e){
+            //suppress error
+            return null;
+        }
     }
 
 }
