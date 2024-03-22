@@ -10,15 +10,15 @@ public class StarterClass {
         //Test the Fraud detection system without any data input, data are generated randomly on the fly
         //to simulate realife transaction. NB: program sleep after each input for half a second to allow
         // better view of Output. add this characters "//" to beginning of line 13 before uncommenting test type
-        simulateTestWithInteractiveRandomTransaction();
+        //simulateTestWithInteractiveRandomTransaction();
 
         //Generate a fresh testdata by run the method below, you can use this together with method on line 21
         //as it generate fresh data into `data.txt` remove the "//" in line 17 below to run test with method.
-        //generateFreshTestData();
+        generateFreshTestData();
 
         //Test the Fraud detection system with sample data.txt in project root folder
         //remove the "//" in line 21 below to run test with method.
-        //simulateTestWithDataFileInWorkDir();
+        simulateTestWithDataFileInWorkDir();
 
         //Test the Fraud detection system with  your preferred sample data file by specifying full path or
         //bring the data file to this project root folder where `data.txt` exist and specify the filename
