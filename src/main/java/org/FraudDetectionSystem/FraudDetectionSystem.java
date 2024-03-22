@@ -1,4 +1,4 @@
-package org.example;
+package org.FraudDetectionSystem;
 
 import java.util.*;
 
@@ -28,12 +28,34 @@ public class FraudDetectionSystem {
 
     //This is the timestamp for the detection to start
     private long currentTimestamp = Math.round(System.currentTimeMillis()/1000);
-    Queue<TransactionEvent> queue = new LinkedList<TransactionEvent>();
     TreeMap<Long, Double> transactionEventQueue = new TreeMap<>();
-    Map<String, TreeMap<Long, TransactionEvent>> userTransactionEvents = new HashMap<String, TreeMap<Long, TransactionEvent>>();
-    Map<String, TreeSet<String>> fraudAlert = new HashMap<>();
+    HashMap<String, TreeMap<Long, TransactionEvent>> userTransactionEvents = new HashMap<String, TreeMap<Long, TransactionEvent>>();
+    HashMap<String, TreeSet<String>> fraudAlert = new HashMap<>();
     public String getViolations(){
         return fraudAlert.toString();
+    }
+    public String getViolationsReport(){
+        String report=null;
+        for (String violations : fraudAlert.keySet()) {
+            TreeSet<String> users = fraudAlert.get(violations);
+            String currentReport="";
+            String lastUser=null;
+            for (String user : users) {
+                lastUser =user;
+                currentReport += user + ", ";
+            }
+            currentReport = currentReport.indexOf(", " + lastUser + ", ") > -1 ? currentReport.replace(", " + lastUser + ", "," and " + lastUser +" ") : currentReport.replace(lastUser + ",",lastUser);
+
+            if(FraudViolationType.valueOf(violations).equals(FraudViolationType.ThreeOrMoreServiceUsage)){
+                currentReport += "flagged for conducting transactions in more than 3 distinct services within a 5-minute window.";
+            } else if (FraudViolationType.valueOf(violations).equals(FraudViolationType.UsualAverageTransaction)) {
+                currentReport += "flagged for conducting transactions significantly higher than typical amounts in 24-hours window.";
+            }else{
+                currentReport += "flagged for conducting transactions in Ping Pong pattern.";
+            }
+            report = report==null ? currentReport :report+ "\n"+currentReport;
+        }
+        return report;
     }
     public void detect24HoursAverageViolation(TransactionEvent transactionEvent){
         long sometimeAgoTimestamp = currentTimestamp - (hoursOfAverageTransactions*3600);
@@ -138,30 +160,5 @@ public class FraudDetectionSystem {
 
 
     }
-
-    public static void main(String[] args) {
-        List<TransactionEvent>  testData = new ArrayList<>();
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000), 100.0, "user1", "serviceA"));
-        testData.add( new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+10, 101.0, "user2", "serviceB"));
-        testData.add( new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+20, 115.0, "user3", "serviceC"));
-        testData.add( new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+20, 100.0, "user1", "serviceC"));
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+30, 130.0, "user4", "serviceA"));
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+40, 50.0, "user5", "serviceB"));
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+50, 110.0, "user6", "serviceC"));
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+50, 100.0, "user1", "serviceA"));
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+40, 1500.0, "user5", "serviceA"));
-        testData.add(new TransactionEvent(Math.round(System.currentTimeMillis()/1000)+40, 1500.0, "user5", "serviceC"));
-
-        TreeMap<Long, TransactionEvent> el = new TreeMap<Long, TransactionEvent>();
-        FraudDetectionSystem fraudDetectionSystem = new FraudDetectionSystem();
-
-        for (TransactionEvent transEvent: testData) {
-            fraudDetectionSystem.updateUserBasedQueue(transEvent);
-            System.out.println("");
-        }
-        System.out.println(fraudDetectionSystem.getUserTransactionEvents());
-        System.out.println(fraudDetectionSystem.getViolations());
-    }
-
 
 }
